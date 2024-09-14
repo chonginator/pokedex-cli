@@ -11,7 +11,7 @@ func commandMapForward(cfg *config) error {
 	}
 
 	cfg.nextPageURL = locations.Next
-	cfg.previousPageURL = locations.Next
+	cfg.previousPageURL = locations.Previous
 
 	for _, location := range locations.Results {
 		fmt.Println(location.Name)
