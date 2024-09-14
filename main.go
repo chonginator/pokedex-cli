@@ -3,7 +3,7 @@ package main
 import (
 	"time"
 
-	"github.com/chonginator/pokedex-cli/pokeapi"
+	"github.com/chonginator/pokedex-cli/internal/pokeapi"
 )
 
 func main() {
