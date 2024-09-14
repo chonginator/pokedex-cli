@@ -7,7 +7,7 @@ import (
 	"strings"
 )
 
-func repl() {
+func startRepl(cfg *config) {
 	scanner := bufio.NewScanner(os.Stdin)
 	commands := getCommands()
 
@@ -19,7 +19,7 @@ func repl() {
 		commandName := words[0]
 		command, exists := commands[commandName]
 		if exists {
-			err := command.callback()
+			err := command.callback(cfg)
 			if err != nil {
 				fmt.Println(err)
 			}
@@ -32,35 +32,30 @@ func repl() {
 type cliCommand struct{
 	name				string
 	description string
-	callback 		func() error
+	callback 		func(*config) error
 }
 
 func getCommands() map[string]cliCommand {
-	config := GetConfig()
 	return map[string]cliCommand{
 		"help": {
 			name: "help",
 			description: "Displays a help message",
 			callback: commandHelp,
 		},
-		"exit": {
-			name: "exit",
-			description: "Exit the Pokedex",
-			callback: commandExit,
-		},
 		"map": {
 			name: "map",
 			description: "Displays the names of the next 20 locations in the Pokemon world.",
-			callback: func() error {
-				return commandMap(config)
-			},
+			callback: commandMapForward,
 		},
 		"mapb": {
 			name: "mapb",
 			description: "Displays the names of the previous 20 locations in the Pokemon world.",
-			callback: func() error {
-				return commandMapBack(config)
-			},
+			callback: commandMapBack,
+		},
+		"exit": {
+			name: "exit",
+			description: "Exit the Pokedex",
+			callback: commandExit,
 		},
 	}
 }
