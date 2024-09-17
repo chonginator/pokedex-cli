@@ -12,6 +12,18 @@ func (c *Client) ListLocations(pageURL *string) (PaginatedResourceList, error) {
 		url = *pageURL
 	}
 
+	// pokecache := pokecache.NewCache(5 * time.Second)
+	val, existsInCache := c.cache.Get(url)
+	if existsInCache {
+		fmt.Println("returning cached response!")
+		var locations PaginatedResourceList
+		err := json.Unmarshal(val, &locations)
+		if err != nil {
+			return PaginatedResourceList{}, err
+		}
+		return locations, nil
+	}
+
 	req, err := http.NewRequest("GET", url, nil)
 	if err != nil {
 		return PaginatedResourceList{}, err
@@ -31,6 +43,14 @@ func (c *Client) ListLocations(pageURL *string) (PaginatedResourceList, error) {
 	err = decoder.Decode(&locations)
 	if err != nil {
 		return PaginatedResourceList{}, err
+	}
+
+	if !existsInCache {
+		locationsData, err := json.Marshal(locations)
+		if err != nil {
+			return PaginatedResourceList{}, err
+		}
+		c.cache.Add(url, locationsData)
 	}
 
 	return locations, nil
