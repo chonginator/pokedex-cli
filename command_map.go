@@ -4,7 +4,7 @@ import (
 	"fmt"
 )
 
-func commandMapForward(cfg *config) error {
+func commandMapForward(cfg *config, args ...string) error {
 	locations, err := cfg.pokeapiClient.ListLocations(cfg.nextPageURL)
 	if err != nil {
 		return err
@@ -20,7 +20,7 @@ func commandMapForward(cfg *config) error {
 	return nil
 }
 
-func commandMapBack(cfg *config) error {
+func commandMapBack(cfg *config, args ...string) error {
 	if cfg.previousPageURL == nil {
 		return fmt.Errorf("no previous results")
 	}

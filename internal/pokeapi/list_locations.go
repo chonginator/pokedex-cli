@@ -46,7 +46,6 @@ func (c *Client) ListLocations(pageURL *string) (PaginatedResourceList, error) {
 	if err != nil {
 		return PaginatedResourceList{}, err
 	}
-
 	c.cache.Add(url, locationsData)
 
 	return locations, nil
