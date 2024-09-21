@@ -4,11 +4,23 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"io"
 	"net/http"
 )
 
 func (c *Client) GetPokemon(name string) (Pokemon, error) {
 	URL := baseURL + "/pokemon/" + name
+
+	if val, ok := c.cache.Get(URL); ok {
+		pokemon := Pokemon{}
+		err := json.Unmarshal(val, &pokemon)
+
+		if err != nil {
+			return Pokemon{}, nil
+		}
+		return pokemon, nil
+	}
+
 	req, err := http.NewRequest("GET", URL, nil)
 	if err != nil {
 		return Pokemon{}, err
@@ -18,6 +30,7 @@ func (c *Client) GetPokemon(name string) (Pokemon, error) {
 	if err != nil {
 		return Pokemon{}, nil
 	}
+	defer res.Body.Close()
 
 	if res.StatusCode == 404 {
 		return Pokemon{}, errors.New("pokemon does not exist")
@@ -26,12 +39,18 @@ func (c *Client) GetPokemon(name string) (Pokemon, error) {
 		return Pokemon{}, fmt.Errorf("unexpected non-OK status code: %v", res.StatusCode)
 	}
 
-	defer res.Body.Close()
-	decoder := json.NewDecoder(res.Body)
-	var pokemon Pokemon
-	err = decoder.Decode(&pokemon)
+	data, err := io.ReadAll(res.Body)
+	if err != nil {
+		return Pokemon{}, err
+	}
+
+	pokemon := Pokemon{}
+	err = json.Unmarshal(data, &pokemon)
 	if err != nil {
 		return Pokemon{}, nil
 	}
+
+	c.cache.Add(URL, data)
+
 	return pokemon, nil
 }
