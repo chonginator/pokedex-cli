@@ -36,7 +36,7 @@ func (c *Client) GetPokemon(name string) (Pokemon, error) {
 		return Pokemon{}, errors.New("pokemon does not exist")
 	}
 	if res.StatusCode > 399 {
-		return Pokemon{}, fmt.Errorf("unexpected non-OK status code: %v", res.StatusCode)
+		return Pokemon{}, fmt.Errorf("non-OK status code: %v", res.StatusCode)
 	}
 
 	data, err := io.ReadAll(res.Body)

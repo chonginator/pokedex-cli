@@ -2,48 +2,54 @@ package pokeapi
 
 import (
 	"encoding/json"
+	"errors"
+	"fmt"
+	"io"
 	"net/http"
 )
 
-func (c *Client) ListPokemon(locationAreaName string) ([]Resource, error) {
+func (c *Client) GetLocation(locationAreaName string) (LocationArea, error) {
 	URL := baseURL + "/location-area" + "/" + locationAreaName
 
 	if val, ok := c.cache.Get(URL); ok {
-		pokemon := []Resource{}
+		pokemon := LocationArea{}
 		err := json.Unmarshal(val, &pokemon)
 		if err != nil {
-			return []Resource{}, err
+			return LocationArea{}, err
 		}
 		return pokemon, nil
 	}
 
 	req, err := http.NewRequest("GET", URL, nil)
 	if err != nil {
-		return []Resource{}, err
+		return LocationArea{}, err
 	}
 
 	res, err := c.httpClient.Do(req)
 	if err != nil {
-		return []Resource{}, err
+		return LocationArea{}, err
 	}
-
 	defer res.Body.Close()
-	decoder := json.NewDecoder(res.Body)
+
+	if res.StatusCode == 404 {
+		return LocationArea{}, errors.New("location area does not exist")
+	}
+	if res.StatusCode > 399 {
+		return LocationArea{}, fmt.Errorf("non-OK status code: %v", res.StatusCode)
+	}
+
+	data, err := io.ReadAll(res.Body)
+	if err != nil {
+		return LocationArea{}, nil
+	}
+
 	locationArea := LocationArea{}
-	err = decoder.Decode(&locationArea)
+	err = json.Unmarshal(data, &locationArea)
 	if err != nil {
-		return []Resource{}, err
-	}
-	pokemon := []Resource{}
-	for _, pokemonEncounter := range locationArea.PokemonEncounters {
-		pokemon = append(pokemon, pokemonEncounter.Pokemon)
+		return LocationArea{}, nil
 	}
 
-	pokemonData, err := json.Marshal(pokemon)
-	if err != nil {
-		return []Resource{}, err
-	}
-	c.cache.Add(URL, pokemonData)
+	c.cache.Add(URL, data)
 
-	return pokemon, nil
+	return locationArea, nil
 }
