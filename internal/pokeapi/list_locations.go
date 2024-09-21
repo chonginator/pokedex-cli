@@ -31,7 +31,7 @@ func (c *Client) ListLocations(pageURL *string) (PaginatedResourceList, error) {
 		return PaginatedResourceList{}, err
 	}
 	defer res.Body.Close()
-	if res.StatusCode > 299 {
+	if res.StatusCode > 399 {
 		return PaginatedResourceList{}, fmt.Errorf("unexpected non-OK status code: %v", res.StatusCode)
 	}
 
